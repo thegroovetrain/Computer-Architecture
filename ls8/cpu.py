@@ -128,7 +128,7 @@ class CPU:
 
         print(f"TRACE: %02X %08s | %02X %02X %02X |" % (
             self.pc,
-            bin(self.fl)[2:].ljust(8, '0'),
+            bin(self.fl)[2:].rjust(8, '0'),
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
@@ -145,7 +145,7 @@ class CPU:
         self.running = True
 
         while self.running:
-            self.trace()
+            # self.trace()
 
             # load the current instruction into the instruction register
             self.ir = self.ram_read(self.pc)
@@ -224,7 +224,6 @@ class CPU:
         self.reg[7] -= 1
         self.handle_overflow(7)
         self.ram_write(self.reg[7], self.pc + 2)
-        # print(hex(self.ram_read(self.pc + 2)))
         self.pc = self.reg[r]
 
     def _jeq(self, r):
@@ -261,10 +260,10 @@ class CPU:
         self.pc = self.reg[r]
 
     def _jne(self, r):
-        if self.fl & 0b1 == 0:
-            self.pc = self.reg[r]
-        else:
+        if self.fl & 0b1:
             self.pc += 2
+        else:
+            self.pc = self.reg[r]
 
     def _ret(self):
         self.pc = self.ram_read(self.reg[7])
@@ -288,11 +287,11 @@ class CPU:
         # if ra > rb, set greater than flag G (0b00000010) to 1, otherwise to 0
         self.fl &= 0xF8
         if self.reg[ra] == self.reg[rb]:
-            self.fl &= 0xF9
+            self.fl |= 0x01
         elif self.reg[ra] < self.reg[rb]:
-            self.fl &= 0xFC
+            self.fl |= 0x04
         elif self.reg[ra] > self.reg[rb]:
-            self.fl &= 0xFA
+            self.fl |= 0x02
 
     def _dec(self, ra):
         self.reg[ra] -= 1
